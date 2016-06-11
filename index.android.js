@@ -1,6 +1,6 @@
 // @flow
 import React, { Component } from 'react';
-import {
+import ReactNative, {
    AppRegistry,
    Dimensions,
    StyleSheet,
@@ -11,6 +11,17 @@ import {
 } from 'react-native';
 import Pusher from 'pusher-js/react-native';
 import FlowBoard from './views/FlowBoard';
+
+// You need to set `window.navigator` to something in order to use the socket.io
+// client. You have to do it like this in order to use the debugger because the
+// debugger in React Native runs in a webworker and only has a getter method for
+// `window.navigator`.
+global.window = global.window || {};
+global.window.navigator = global.window.navigator || {};
+global.window.navigator.userAgent = 'react-native';
+
+// This must be below your `window.navigator` hack above
+import io from 'socket.io-client/socket.io';
 
 const pusher = new Pusher('4fc24b61958c6d8b4e01');
 const actionMap = {
@@ -41,6 +52,8 @@ class GoTapGo extends Component {
          dimensions: dimensions,
          flow: null,
          sort: 'score',
+         messages: [],
+         page: 'chat',
       };
    }
 
@@ -59,6 +72,16 @@ class GoTapGo extends Component {
             'Accept': 'application/json',
          }
       }).then(res => res.json()).then(json => this.setState({ gotBarrelAgedBeers: true, beers: (this.state.beers || []).concat(json.barrel_aged_beers) }));
+      // Connect to chat room
+      this._socket = io('http://localhost:3000', {
+         jsonp: false
+         //transports: ['websocket'] // you need to explicitly tell it to use websockets
+      });
+      this._socket.on('chat', (msg) => {
+         this.setState({
+            messages: this.state.messages.concat([msg])
+         });
+      });
    }
 
    componentWillUnmount () {
@@ -85,11 +108,25 @@ class GoTapGo extends Component {
     * RENDERING
     **************************************************************/
    render () {
-      var { beers, dimensions, flow, gotBeers, gotBarrelAgedBeers, sort } = this.state;
-      
+      var { beers, dimensions, flow, gotBeers, gotBarrelAgedBeers, messages, page, sort } = this.state;
+      var pageInstance;
+
       // Wait for data
       if (!gotBeers || !gotBarrelAgedBeers || !flow) {
          return this.renderLoadingIndicator();
+      }
+
+      if (page === 'flowboard') {
+         pageInstance = <FlowBoard beers={beers} dimensions={dimensions} flow={flow} sort={sort} />;
+      }
+      else {
+         pageInstance = (
+            <View>
+               {messages.map(msg => {
+                  return <Text style={styles.text}>{msg.msg}</Text>;
+               })}
+            </View>
+         );
       }
 
       // Render the flowboard
@@ -106,7 +143,7 @@ class GoTapGo extends Component {
                   { title: 'Sort by Highest ABV', show: 'never' },
                ]}
                onActionSelected={this.handleActionSelected} />
-            <FlowBoard beers={beers} dimensions={dimensions} flow={flow} sort={sort} />
+            {pageInstance}
          </View>
       );
    }

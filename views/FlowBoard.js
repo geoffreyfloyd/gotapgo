@@ -114,7 +114,7 @@ class FlowBoard extends Component {
             initialListSize={parseInt(dimensions.height / 70, 10)}
             renderRow={dimensions.width < 600 ? this.renderPhoneRow.bind(this) : this.renderTabletRow.bind(this)}
             renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
-            renderSeparator={this.renderSeperator} />
+            renderSeparator={this.renderSeparator} />
       );
    }
 
@@ -195,10 +195,10 @@ class FlowBoard extends Component {
       );
    }
 
-   renderSeperator (sectionID: number, rowID: number, adjacentRowHighlighted: bool) {
+   renderSeparator (sectionId: number, rowId: number, adjacentRowHighlighted: bool) {
       return (
          <View
-            key={`${sectionID}-${rowID}`}
+            key={`${sectionId}-${rowId}`}
             style={separatorStyle(adjacentRowHighlighted)}
          />
       );
