@@ -1,15 +1,11 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
+// @flow
 import React, { Component } from 'react';
 import {
    AppRegistry,
    Dimensions,
    StyleSheet,
    Text,
+   ProgressBarAndroid,
    ToolbarAndroid,
    View
 } from 'react-native';
@@ -56,13 +52,13 @@ class GoTapGo extends Component {
          headers: {
             'Accept': 'application/json',
          }
-      }).then(res => res.json()).then(json => this.setState({ beers: (this.state.beers || []).concat(json.beers) }));
+      }).then(res => res.json()).then(json => this.setState({ gotBeers: true, beers: (this.state.beers || []).concat(json.beers) }));
       // Get Barrel Aged Beers
       fetch('http://apis.mondorobot.com/barrel-aged-beers', {
          headers: {
             'Accept': 'application/json',
          }
-      }).then(res => res.json()).then(json => this.setState({ beers: (this.state.beers || []).concat(json.barrel_aged_beers) }));
+      }).then(res => res.json()).then(json => this.setState({ gotBarrelAgedBeers: true, beers: (this.state.beers || []).concat(json.barrel_aged_beers) }));
    }
 
    componentWillUnmount () {
@@ -89,10 +85,10 @@ class GoTapGo extends Component {
     * RENDERING
     **************************************************************/
    render () {
-      var { beers, dimensions, flow, sort } = this.state;
+      var { beers, dimensions, flow, gotBeers, gotBarrelAgedBeers, sort } = this.state;
       
       // Wait for data
-      if (!beers || !flow) {
+      if (!gotBeers || !gotBarrelAgedBeers || !flow) {
          return this.renderLoadingIndicator();
       }
 
@@ -117,8 +113,8 @@ class GoTapGo extends Component {
 
    renderLoadingIndicator () {
       return (
-         <View style={styles.container}>
-            <Text style={styles.text}>Loading...</Text>
+         <View style={styles.loadingContainer}>
+            <ProgressBarAndroid styleAttr="Large" />
          </View>
       );
    }
@@ -132,8 +128,16 @@ const styles = StyleSheet.create({
       flex: 1,
       backgroundColor: '#231f1f',
    },
+   loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      backgroundColor: '#231f1f',
+   },
    text: {
+      flex: 1,
       color: '#FFF',
+      textAlign: 'center',
+      textAlignVertical: 'center',
    },
    toolbar: {
       height: 56,

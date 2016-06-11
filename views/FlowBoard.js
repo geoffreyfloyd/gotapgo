@@ -111,7 +111,7 @@ class FlowBoard extends Component {
          <ListView
             dataSource={dataSource}
             enableEmptySections={true}
-            initialListSize={8}
+            initialListSize={parseInt(dimensions.height / 70, 10)}
             renderRow={dimensions.width < 600 ? this.renderPhoneRow.bind(this) : this.renderTabletRow.bind(this)}
             renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
             renderSeparator={this.renderSeperator} />
@@ -121,16 +121,9 @@ class FlowBoard extends Component {
    renderPhoneRow (row: object) {
       var abv, change, score, summary, imageSource;
 
-      // If we can't find the beer in the list
-      // assume it's a tap room rarity
-      if (!row.info) {
-         imageSource = require('./images/trr.png');
-      }
-      else {
-         abv = row.info.abv;
-         summary = row.info.style;
-         imageSource = { uri: row.info.label_image.mobile || row.info.label_image.original };
-      }
+      abv = row.info.abv;
+      summary = row.info.style;
+      imageSource = { uri: row.info.label_image.mobile || row.info.label_image.original };
 
       // Round Big values to integer
       change = Math.round(row.change);
