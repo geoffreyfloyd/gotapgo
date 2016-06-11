@@ -84,7 +84,7 @@ class GoTapGo extends Component {
       //    });
       // });
 
-      this._ws = new WebSocket('ws://localhost:3000');
+      this._ws = new WebSocket('ws://home.hoomanlogic.com:3050');
 
       this._ws.onopen = () => {
          // // connection opened
@@ -172,8 +172,8 @@ class GoTapGo extends Component {
       else {
          pageInstance = (
             <View>
-               {messages.map(msg => {
-                  return <Text style={styles.text}>{msg}</Text>;
+               {messages.map((msg, index) => {
+                  return <Text key={index} style={styles.text}>{msg}</Text>;
                })}
             </View>
          );
