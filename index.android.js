@@ -11,6 +11,7 @@ import ReactNative, {
 } from 'react-native';
 import Pusher from 'pusher-js/react-native';
 import FlowBoard from './views/FlowBoard';
+var WebSocketClient = require('websocket').client;
 
 // // You need to set `window.navigator` to something in order to use the socket.io
 // // client. You have to do it like this in order to use the debugger because the
@@ -53,7 +54,7 @@ class GoTapGo extends Component {
          flow: null,
          sort: 'score',
          messages: [],
-         // page: 'flowboard',
+         page: 'chat',
       };
    }
 
@@ -82,6 +83,55 @@ class GoTapGo extends Component {
       //       messages: this.state.messages.concat([msg])
       //    });
       // });
+
+      this._ws = new WebSocket('ws://localhost:3000');
+
+      this._ws.onopen = () => {
+         // // connection opened
+         // ws.send('something');
+         this._ws.send('hi');
+      };
+
+      this._ws.onmessage = (e) => {
+         this.setState({
+            messages: this.state.messages.concat([e.data])
+         });
+      };
+
+      this._ws.onerror = (e) => {
+         // an error occurred
+         console.log(e.message);
+      };
+
+      this._ws.onclose = (e) => {
+         // connection closed
+         console.log(e.code, e.reason);
+      };
+
+      // this._client = new WebSocketClient();
+      // this._client.on('connectFailed', function(error) {
+      //    console.log('Connect Error: ' + error.toString());
+      // });
+      
+      // this._client.on('connect', function(connection) {
+      //    console.log('WebSocket Client Connected');
+      //    connection.on('error', function(error) {
+      //       console.log("Connection Error: " + error.toString());
+      //    });
+      //    connection.on('close', function() {
+      //       console.log('echo-protocol Connection Closed');
+      //    });
+      //    connection.on('message', function(message) {
+      //       if (message.type === 'utf8') {
+      //          this.setState({
+      //             messages: this.state.messages.concat([message.utf8Data])
+      //          });
+      //          console.log("Received: '" + message.utf8Data + "'");
+      //       }
+      //    });
+      // });
+      
+      // this._client.connect('ws://localhost:3000/', 'echo-protocol');
    }
 
    componentWillUnmount () {
@@ -108,7 +158,7 @@ class GoTapGo extends Component {
     * RENDERING
     **************************************************************/
    render () {
-      var { beers, dimensions, flow, gotBeers, gotBarrelAgedBeers, messages, sort } = this.state;
+      var { beers, dimensions, flow, gotBeers, gotBarrelAgedBeers, messages, page, sort } = this.state;
       var pageInstance;
 
       // Wait for data
@@ -116,18 +166,18 @@ class GoTapGo extends Component {
          return this.renderLoadingIndicator();
       }
 
-      // if (page === 'flowboard') {
-      pageInstance = <FlowBoard beers={beers} dimensions={dimensions} flow={flow} sort={sort} />;
-      // }
-      // else {
-      //    pageInstance = (
-      //       <View>
-      //          {messages.map(msg => {
-      //             return <Text style={styles.text}>{msg.msg}</Text>;
-      //          })}
-      //       </View>
-      //    );
-      // }
+      if (page === 'flowboard') {
+         pageInstance = <FlowBoard beers={beers} dimensions={dimensions} flow={flow} sort={sort} />;
+      }
+      else {
+         pageInstance = (
+            <View>
+               {messages.map(msg => {
+                  return <Text style={styles.text}>{msg}</Text>;
+               })}
+            </View>
+         );
+      }
 
       // Render the flowboard
       return (
