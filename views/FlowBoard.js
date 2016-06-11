@@ -84,7 +84,7 @@ class FlowBoard extends Component {
 
       var prevAmt = new Big(previous.amount_remaining);
       var curAmt = new Big(flowItem.amount_remaining);       
-      return prevAmt.minus(curAmt).times(1000);
+      return prevAmt.minus(curAmt).times(500);
    }
 
    calculateScore (flowItem, previousScore, change) {
@@ -174,20 +174,20 @@ class FlowBoard extends Component {
             this.pressRow(row);
          }}>
             <View style={styles.row}>
-               <View style={styles.thumbPanel}>
+               <View style={styles.thumbPanelTab}>
                   <Image style={styles.thumb} source={imageSource} />
                </View>
-               <View style={styles.labelPanel}>
+               <View style={styles.labelPanelTab}>
                   <Text style={styles.nameTab}>{row.beer_name}</Text>
                   <Text style={styles.summary}>{summary}</Text>
                </View>
-               <View style={styles.labelPanel}>
+               <View style={styles.scorePanelTab}>
                   <Text style={styles.abvTab}>{abv}%</Text>
                </View>
-               <View style={styles.scorePanel}>
+               <View style={styles.scorePanelTab}>
                   <Text style={styles.changeTab}>{change ? '+' + change : ''}</Text>
                </View>
-               <View style={styles.scorePanel}>
+               <View style={styles.scorePanelTab}>
                   <Text style={styles.scoreTab}>{score}</Text>
                </View>
             </View>
@@ -236,6 +236,9 @@ const styles = StyleSheet.create({
    thumbPanel: {
       paddingRight: 4,
    },
+   thumbPanelTab: {
+      paddingRight: 10,
+   },
    thumb: {
       width: 64,
       height: 64,
@@ -244,11 +247,13 @@ const styles = StyleSheet.create({
       flex: 3,
    },
    labelPanelTab: {
-      flex: 3,
-      height: 64,
-      alignItems: 'center',
+      flex: 4,
    },
    scorePanel: {
+      flex: 1,
+      paddingRight: 4,
+   },
+   scorePanelTab: {
       flex: 1,
       paddingRight: 4,
    },
