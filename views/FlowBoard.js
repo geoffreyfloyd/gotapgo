@@ -6,7 +6,7 @@ import {
    Image,
    Text,
    RecyclerViewBackedScrollView,
-   TouchableHighlight,
+   TouchableWithoutFeedback,
    View,
    ListView
 } from 'react-native';
@@ -45,20 +45,37 @@ class FlowBoard extends Component {
       // 
       var scoreboard = props.flow.map(flowItem => {
          var previous = first(scores, 'beer_id', flowItem.beer_id);
+         var info = first(props.beers, 'id', flowItem.beer_id);
          var previousScore = previous ? previous.score : new Big(0);
          var change = this.calculateChange(flowItem, previous);
-
+         
          return {
             ...flowItem,
+            info: info,
             change: change,
             score: this.calculateScore(flowItem, previousScore, change),
          };
       });
 
       // Sort scoreboard by leading scores
-      scoreboard.sort((a, b) => {
-         return b.score.cmp(a.score);
-      });
+      switch (props.sort) {
+         case ('abv'):
+            scoreboard.sort((a, b) => {
+               return parseFloat(a.info ? a.info.abv : 0) > parseFloat(b.info ? b.info.abv : 0) ? -1 : 1;
+            });
+            break;
+         case ('name'):
+            scoreboard.sort((a, b) => {
+               return a.beer_name > b.beer_name ? 1 : -1;
+            });
+            break;
+         case ('score'):
+            scoreboard.sort((a, b) => {
+               return b.score.cmp(a.score);
+            });
+            break;
+      }
+      
       return scoreboard;
    }
 
@@ -81,6 +98,10 @@ class FlowBoard extends Component {
       return ds.cloneWithRows(data);
    }
 
+   pressRow (row: object) {
+      // TODO: Cheer for your beer!
+   }
+
    /***************************************************************
     * RENDERING
     **************************************************************/
@@ -98,21 +119,19 @@ class FlowBoard extends Component {
       );
    }
 
-   renderRow (row) {
+   renderRow (row: object) {
       var { beers } = this.props;
-      var beer, abv, change, score, summary, imageSource;
+      var abv, change, score, summary, imageSource;
 
-      // Get beer info for this flowboard row
-      beer = first(beers, 'id', row.beer_id);
       // If we can't find the beer in the list
       // assume it's a tap room rarity
-      if (!beer) {
+      if (!row.info) {
          imageSource = require('./images/trr.png');
       }
       else {
-         abv = beer.abv;
-         summary = beer.style;
-         imageSource = { uri: beer.label_image.mobile || beer.label_image.original };
+         abv = row.info.abv;
+         summary = row.info.style;
+         imageSource = { uri: row.info.label_image.mobile || row.info.label_image.original };
       }
 
       // Round Big values to integer
@@ -120,18 +139,24 @@ class FlowBoard extends Component {
       score = Math.round(row.score);
 
       return (
-         <View style={styles.row}>
-            <Image style={styles.thumb} source={imageSource} />
-            <View style={styles.labelPanel}>
-               <Text style={styles.name}>{row.beer_name}</Text>
-               <Text style={styles.summary}>{summary}</Text>
-               <Text style={styles.abv}>{abv}%</Text>
+         <TouchableWithoutFeedback onPress={() => {
+            this.pressRow(row);
+         }}>
+            <View style={styles.row}>
+               <View style={styles.thumbPanel}>
+                  <Image style={styles.thumb} source={imageSource} />
+               </View>
+               <View style={styles.labelPanel}>
+                  <Text style={styles.name}>{row.beer_name}</Text>
+                  <Text style={styles.summary}>{summary}</Text>
+                  <Text style={styles.abv}>{abv}%</Text>
+               </View>
+               <View style={styles.scorePanel}>
+                  <Text style={styles.score}>{score}</Text>
+                  <Text style={styles.change}>{change ? '+' + change : ''}</Text>
+               </View>
             </View>
-            <View style={styles.scorePanel}>
-               <Text style={styles.score}>{score}</Text>
-               <Text style={styles.change}>{change ? '+' + change : ''}</Text>
-            </View>
-         </View>
+         </TouchableWithoutFeedback>
       );
    }
 
@@ -172,6 +197,9 @@ const styles = StyleSheet.create({
       flex: 1,
       flexDirection: 'row',
       padding: 8,
+   },
+   thumbPanel: {
+      paddingRight: 4,
    },
    thumb: {
       width: 64,

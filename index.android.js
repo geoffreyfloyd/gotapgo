@@ -9,12 +9,23 @@ import {
    AppRegistry,
    StyleSheet,
    Text,
+   ToolbarAndroid,
    View
 } from 'react-native';
 import Pusher from 'pusher-js/react-native';
 import FlowBoard from './views/FlowBoard';
 
 const pusher = new Pusher('4fc24b61958c6d8b4e01');
+const actionMap = {
+   0: 'name',
+   1: 'score',
+   2: 'abv',
+};
+const viewTitle = {
+   'name': 'by Name',
+   'score': 'by Leader',
+   'abv': 'by Highest ABV',
+};
 
 class GoTapGo extends Component {
 
@@ -23,10 +34,14 @@ class GoTapGo extends Component {
     **************************************************************/
    constructor (props) {
       super(props);
+
+      this.handleActionSelected = this.handleActionSelected.bind(this);
       this.handleFlowData = this.handleFlowData.bind(this);
+      
       this.state = {
          beers: null,
          flow: null,
+         sort: 'score',
       };
    }
 
@@ -55,6 +70,12 @@ class GoTapGo extends Component {
    /***************************************************************
     * EVENT HANDLING
     **************************************************************/
+   handleActionSelected (actionIndex) {
+      this.setState({
+         sort: actionMap[actionIndex]
+      });
+   }
+
    handleFlowData (flow) {
       this.setState({
          flow: flow
@@ -65,7 +86,7 @@ class GoTapGo extends Component {
     * RENDERING
     **************************************************************/
    render () {
-      var { beers, flow } = this.state;
+      var { beers, flow, sort } = this.state;
       
       // Wait for data
       if (!beers || !flow) {
@@ -75,7 +96,18 @@ class GoTapGo extends Component {
       // Render the flowboard
       return (
          <View style={styles.container}>
-            <FlowBoard beers={beers} flow={flow} />
+            <ToolbarAndroid
+               style={styles.toolbar}
+               logo={require('./images/avery.png')}
+               title={`Flow ${viewTitle[sort]}`}
+               //titleColor="#FFF"
+               actions={[
+                  { title: 'Sort by Name', show: 'never' },
+                  { title: 'Sort by Leader', show: 'never' },
+                  { title: 'Sort by Highest ABV', show: 'never' },
+               ]}
+               onActionSelected={this.handleActionSelected} />
+            <FlowBoard beers={beers} flow={flow} sort={sort} />
          </View>
       );
    }
@@ -99,6 +131,10 @@ const styles = StyleSheet.create({
    },
    text: {
       color: '#FFF',
+   },
+   toolbar: {
+      height: 56,
+      backgroundColor: '#FDFDFD'
    }
 });
 
