@@ -7,8 +7,8 @@ var server = http.createServer(function(request, response) {
    response.end();
 });
 
-server.listen(3000, function() {
-   console.log('Socket Server is listening on port 3000');
+server.listen(3050, function() {
+   console.log('Socket Server is listening on port 3050');
 });
 
 var wss = new WebSocketServer({
@@ -27,7 +27,7 @@ function originIsAllowed(origin) {
 }
 
 var connections = [];
-
+var userNameGen = 1;
 wss.on('request', function(request) {
    if (!originIsAllowed(request.origin)) {
       // Make sure we only accept requests from an allowed origin
@@ -40,7 +40,8 @@ wss.on('request', function(request) {
    connections.push(connection);
    console.log((new Date()) + ' Connection accepted.');
 
-   var connectionName = 'BeerFan' + connections.length; 
+   var connectionName = 'BeerFan' + userNameGen;
+   userNameGen++;
 
    // Broadcast to all
    connections.forEach(function (conn) {
@@ -53,7 +54,7 @@ wss.on('request', function(request) {
 
          // Broadcast to all
          connections.forEach(function (conn) {
-            conn.sendUTF(connectionName + ' says ' + message.utf8Data);
+            conn.sendUTF(connectionName + ': ' + message.utf8Data);
          });
       }
       else if (message.type === 'binary') {
@@ -63,5 +64,7 @@ wss.on('request', function(request) {
    });
    connection.on('close', function(reasonCode, description) {
       console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+      // Remove the connection from the list
+      connections = connections.slice().filter(conn => conn !== connection);
    });
 });

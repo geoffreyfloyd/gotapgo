@@ -6,6 +6,7 @@ import ReactNative, {
    StyleSheet,
    Text,
    ProgressBarAndroid,
+   TextInput,
    ToolbarAndroid,
    View
 } from 'react-native';
@@ -58,6 +59,7 @@ class GoTapGo extends Component {
          sort: 'score',
          messages: [],
          page: 'flowboard',
+         text: ''
       };
    }
 
@@ -86,7 +88,7 @@ class GoTapGo extends Component {
       this._ws.onopen = () => {
          // // connection opened
          // ws.send('something');
-         this._ws.send('hi');
+         //this._ws.send('hi');
       };
 
       this._ws.onmessage = (e) => {
@@ -138,7 +140,7 @@ class GoTapGo extends Component {
     **************************************************************/
    render () {
       var { beers, dimensions, flow, gotBeers, gotBarrelAgedBeers, messages, page, sort } = this.state;
-      var pageInstance;
+      var pageInstance, title;
 
       // Wait for data
       if (!gotBeers || !gotBarrelAgedBeers || !flow) {
@@ -147,15 +149,27 @@ class GoTapGo extends Component {
 
       if (page === 'flowboard') {
          pageInstance = <FlowBoard beers={beers} dimensions={dimensions} flow={flow} sort={sort} />;
+         title = `Flow ${viewTitle[sort]}`;
       }
       else {
          pageInstance = (
             <View>
-               {messages.map((msg, index) => {
-                  return <Text key={index} style={styles.text}>{msg}</Text>;
-               })}
+               <View style={styles.container}>
+                  {messages.map((msg, index) => {
+                     return <Text key={index} style={styles.text}>{msg}</Text>;
+                  })}
+               </View>
+               <TextInput
+                  style={{height: 40, color: '#fff', borderColor: 'gray', borderWidth: 1}}
+                  onChangeText={(text) => this.setState({text})}
+                  onSubmitEditing={() => {
+                     this._ws.send(this.state.text);
+                     this.setState({ text: '' });
+                  }}
+                  value={this.state.text} />
             </View>
          );
+         title = 'Beer Talk';
       }
 
       // Render the flowboard
@@ -164,8 +178,7 @@ class GoTapGo extends Component {
             <ToolbarAndroid
                style={styles.toolbar}
                logo={require('./images/avery.png')}
-               title={`Flow ${viewTitle[sort]}`}
-               //titleColor="#FFF"
+               title={title}
                actions={[
                   { title: 'Sort by Name', show: 'never' },
                   { title: 'Sort by Leader', show: 'never' },
