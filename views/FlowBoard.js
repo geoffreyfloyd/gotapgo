@@ -26,16 +26,14 @@ class FlowBoard extends Component {
    }
 
    componentWillReceiveProps (nextProps) {
-      var result = this.calculateScoreboard(nextProps, this.state.scoreboard);
+      if (nextProps.flow !== this.props.flow) {
+         var result = this.calculateScoreboard(nextProps, this.state.scoreboard);
 
-      // HACK: https://github.com/facebook/react-native/issues/5934
-      this.setState({
-         scoreboard: result,
-         dataSource: this.getDataSource([])
-      });
-      this.setState({
-         dataSource: this.getDataSource(result)
-      });
+         this.setState({
+            scoreboard: result,
+            dataSource: this.getDataSource(result)
+         });
+      }
    }
 
    /***************************************************************
@@ -107,20 +105,20 @@ class FlowBoard extends Component {
     **************************************************************/
    render () {
       var { dataSource } = this.state;
-
+      var { dimensions } = this.props;
+      
       return (
          <ListView
             dataSource={dataSource}
             enableEmptySections={true}
             initialListSize={8}
-            renderRow={this.renderRow.bind(this)}
+            renderRow={dimensions.width < 600 ? this.renderPhoneRow.bind(this) : this.renderTabletRow.bind(this)}
             renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
             renderSeparator={this.renderSeperator} />
       );
    }
 
-   renderRow (row: object) {
-      var { beers } = this.props;
+   renderPhoneRow (row: object) {
       var abv, change, score, summary, imageSource;
 
       // If we can't find the beer in the list
@@ -160,6 +158,50 @@ class FlowBoard extends Component {
       );
    }
 
+   renderTabletRow (row: object) {
+      var abv, change, score, summary, imageSource;
+
+      // If we can't find the beer in the list
+      // assume it's a tap room rarity
+      if (!row.info) {
+         imageSource = require('./images/trr.png');
+      }
+      else {
+         abv = row.info.abv;
+         summary = row.info.style;
+         imageSource = { uri: row.info.label_image.mobile || row.info.label_image.original };
+      }
+
+      // Round Big values to integer
+      change = Math.round(row.change);
+      score = Math.round(row.score);
+
+      return (
+         <TouchableWithoutFeedback onPress={() => {
+            this.pressRow(row);
+         }}>
+            <View style={styles.row}>
+               <View style={styles.thumbPanel}>
+                  <Image style={styles.thumb} source={imageSource} />
+               </View>
+               <View style={styles.labelPanel}>
+                  <Text style={styles.nameTab}>{row.beer_name}</Text>
+                  <Text style={styles.summary}>{summary}</Text>
+               </View>
+               <View style={styles.labelPanel}>
+                  <Text style={styles.abvTab}>{abv}%</Text>
+               </View>
+               <View style={styles.scorePanel}>
+                  <Text style={styles.changeTab}>{change ? '+' + change : ''}</Text>
+               </View>
+               <View style={styles.scorePanel}>
+                  <Text style={styles.scoreTab}>{score}</Text>
+               </View>
+            </View>
+         </TouchableWithoutFeedback>
+      );
+   }
+
    renderSeperator (sectionID: number, rowID: number, adjacentRowHighlighted: bool) {
       return (
          <View
@@ -188,7 +230,7 @@ function first (list, prop, val) {
 function separatorStyle (adjacentRowHighlighted) {
    return {
       height: adjacentRowHighlighted ? 4 : 1,
-      backgroundColor: adjacentRowHighlighted ? '#3B5998' : '#222',
+      backgroundColor: adjacentRowHighlighted ? '#3B5998' : '#111',
    }
 }
 
@@ -208,6 +250,11 @@ const styles = StyleSheet.create({
    labelPanel: {
       flex: 3,
    },
+   labelPanelTab: {
+      flex: 3,
+      height: 64,
+      alignItems: 'center',
+   },
    scorePanel: {
       flex: 1,
       paddingRight: 4,
@@ -216,12 +263,29 @@ const styles = StyleSheet.create({
       color: '#FFFFFF',
       textAlign: 'center',
    },
+   abvTab: {
+      flex: 1,
+      color: '#FFFFFF',
+      textAlign: 'center',
+      fontWeight: 'bold',
+      fontSize: 24,
+      textAlignVertical: 'center',
+   },
    score: {
       flex: 1,
       color: '#FFFFFF',
       textAlign: 'right',
       fontWeight: 'bold',
       textAlignVertical: 'center',
+   },
+   scoreTab: {
+      flex: 1,
+      color: '#FFFFFF',
+      textAlign: 'right',
+      fontWeight: 'bold',
+      fontSize: 24,
+      textAlignVertical: 'center',
+      alignItems: 'center',
    },
    change: {
       flex: 1,
@@ -231,6 +295,15 @@ const styles = StyleSheet.create({
       fontSize: 16,
       textAlignVertical: 'center',
    },
+   changeTab: {
+      flex: 1,
+      color: '#00FF00',
+      textAlign: 'right',
+      fontWeight: 'bold',
+      fontSize: 24,
+      textAlignVertical: 'center',
+      alignItems: 'center',
+   },
    name: {
       color: '#FFFFFF',
       fontWeight: 'bold',
@@ -238,8 +311,15 @@ const styles = StyleSheet.create({
       
       fontSize: 16,
    },
+   nameTab: {
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      fontSize: 20,
+   },
    summary: {
-      color: '#FF0000',
+      color: '#e31b23',
       textAlign: 'center',
    },
 });

@@ -7,6 +7,7 @@
 import React, { Component } from 'react';
 import {
    AppRegistry,
+   Dimensions,
    StyleSheet,
    Text,
    ToolbarAndroid,
@@ -37,9 +38,11 @@ class GoTapGo extends Component {
 
       this.handleActionSelected = this.handleActionSelected.bind(this);
       this.handleFlowData = this.handleFlowData.bind(this);
-      
+      var dimensions = Dimensions.get('window');
+
       this.state = {
          beers: null,
+         dimensions: dimensions,
          flow: null,
          sort: 'score',
       };
@@ -86,7 +89,7 @@ class GoTapGo extends Component {
     * RENDERING
     **************************************************************/
    render () {
-      var { beers, flow, sort } = this.state;
+      var { beers, dimensions, flow, sort } = this.state;
       
       // Wait for data
       if (!beers || !flow) {
@@ -95,7 +98,7 @@ class GoTapGo extends Component {
 
       // Render the flowboard
       return (
-         <View style={styles.container}>
+         <View style={styles.container} onLayout={event => this.setState({ dimensions: event.nativeEvent.layout })}>
             <ToolbarAndroid
                style={styles.toolbar}
                logo={require('./images/avery.png')}
@@ -107,7 +110,7 @@ class GoTapGo extends Component {
                   { title: 'Sort by Highest ABV', show: 'never' },
                ]}
                onActionSelected={this.handleActionSelected} />
-            <FlowBoard beers={beers} flow={flow} sort={sort} />
+            <FlowBoard beers={beers} dimensions={dimensions} flow={flow} sort={sort} />
          </View>
       );
    }
@@ -127,14 +130,14 @@ class GoTapGo extends Component {
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-      backgroundColor: '#111',
+      backgroundColor: '#231f1f',
    },
    text: {
       color: '#FFF',
    },
    toolbar: {
       height: 56,
-      backgroundColor: '#FDFDFD'
+      backgroundColor: '#f6f5f5'
    }
 });
 
