@@ -37,53 +37,50 @@ const viewTitle = {
 };
 
 class GoTapGo extends Component {
-
    /***************************************************************
     * COMPONENT LIFECYCLE
     **************************************************************/
    constructor (props) {
       super(props);
 
+      // Bind event handlers to instance
       this.handleActionSelected = this.handleActionSelected.bind(this);
       this.handleFlowData = this.handleFlowData.bind(this);
+
+      // Get initial device dimensions (orientation changes handled by View.onLayout)
       var dimensions = Dimensions.get('window');
 
+      // Set initial state of application
       this.state = {
          beers: null,
          dimensions: dimensions,
          flow: null,
          sort: 'score',
          messages: [],
-         page: 'chat',
+         page: 'flowboard',
       };
    }
 
    componentDidMount () {
+      // Subscribe to flowmeter updates from the taproom
       this._channel = pusher.subscribe('taproom');
       this._channel.bind('flowmeter-update', this.handleFlowData);
+      
       // Get Beers
       fetch('http://apis.mondorobot.com/beers', {
          headers: {
             'Accept': 'application/json',
          }
       }).then(res => res.json()).then(json => this.setState({ gotBeers: true, beers: (this.state.beers || []).concat(json.beers) }));
+      
       // Get Barrel Aged Beers
       fetch('http://apis.mondorobot.com/barrel-aged-beers', {
          headers: {
             'Accept': 'application/json',
          }
       }).then(res => res.json()).then(json => this.setState({ gotBarrelAgedBeers: true, beers: (this.state.beers || []).concat(json.barrel_aged_beers) }));
-      // // Connect to chat room
-      // this._socket = io('http://localhost:3000', {
-      //    jsonp: false
-      //    //transports: ['websocket'] // you need to explicitly tell it to use websockets
-      // });
-      // this._socket.on('chat', (msg) => {
-      //    this.setState({
-      //       messages: this.state.messages.concat([msg])
-      //    });
-      // });
 
+      // Connect to a barebome homebrew chatroom socket server
       this._ws = new WebSocket('ws://home.hoomanlogic.com:3050');
 
       this._ws.onopen = () => {
@@ -107,31 +104,6 @@ class GoTapGo extends Component {
          // connection closed
          console.log(e.code, e.reason);
       };
-
-      // this._client = new WebSocketClient();
-      // this._client.on('connectFailed', function(error) {
-      //    console.log('Connect Error: ' + error.toString());
-      // });
-      
-      // this._client.on('connect', function(connection) {
-      //    console.log('WebSocket Client Connected');
-      //    connection.on('error', function(error) {
-      //       console.log("Connection Error: " + error.toString());
-      //    });
-      //    connection.on('close', function() {
-      //       console.log('echo-protocol Connection Closed');
-      //    });
-      //    connection.on('message', function(message) {
-      //       if (message.type === 'utf8') {
-      //          this.setState({
-      //             messages: this.state.messages.concat([message.utf8Data])
-      //          });
-      //          console.log("Received: '" + message.utf8Data + "'");
-      //       }
-      //    });
-      // });
-      
-      // this._client.connect('ws://localhost:3000/', 'echo-protocol');
    }
 
    componentWillUnmount () {
@@ -143,9 +115,16 @@ class GoTapGo extends Component {
     * EVENT HANDLING
     **************************************************************/
    handleActionSelected (actionIndex) {
-      this.setState({
-         sort: actionMap[actionIndex]
-      });
+      if (actionIndex === 3) {
+         this.setState({
+            page: this.state.page === 'flowboard' ? 'chat' : 'flowboard'
+         });
+      }
+      else {
+         this.setState({
+            sort: actionMap[actionIndex]
+         });
+      }
    }
 
    handleFlowData (flow) {
@@ -191,6 +170,7 @@ class GoTapGo extends Component {
                   { title: 'Sort by Name', show: 'never' },
                   { title: 'Sort by Leader', show: 'never' },
                   { title: 'Sort by Highest ABV', show: 'never' },
+                  { title: page === 'flowboard' ? 'Join Chatroom (Alpha)' : 'Check Flowboard', show: 'never' },
                ]}
                onActionSelected={this.handleActionSelected} />
             {pageInstance}
